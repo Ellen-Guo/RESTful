@@ -1,7 +1,33 @@
+
 from flask import Flask, request
 from flask_httpauth import HTTPBasicAuth
 import pymongo
 from pymongo import MongoClient
+from zeroconf import ServiceBrowser, Zeroconf
+from time import sleep
+import socket
+
+
+class MyListener:
+    
+    def remove_service(self, zeroconf, type, name):
+        print("service %s removed" % (name,))
+        
+    def add_service(self, zeroconf, type, name):
+        info = zeroconf.get_service_info(type, name)
+        print("Service %s added, service info: %s" % (name, info))
+        
+        ip_aton = None
+        if info.name == "Testing._http._tcp.local.":
+            for x in info.addresses:
+                ip_aton = x
+                break
+            
+            ip = socket.inet_ntoa(ip_aton)
+            port = info.port
+        else:
+            print("Address and name do not match")
+
 
 # global variables
 app = Flask(__name__)
@@ -35,12 +61,48 @@ def auth_error(status):
 @app.route('/LED')
 @auth.login_required
 def LED():
+    
+    ip = 0
+    port = 0
+    
     command = request.args.get('command')
     # parsing of command from URL
     status = command[0:command.find('-')]
     color = command[command.find('-') + 1: command.find('-', command.find('-') + 1)]
     intensity = command[command.find('-', command.find('-') + 1) + 1:]
-    return status
+    
+    class MyListener:
+    
+        def remove_service(self, zeroconf, type, name):
+            print("service %s removed" % (name,))
+        
+        def add_service(self, zeroconf, type, name):
+            info = zeroconf.get_service_info(type, name)
+            print("Service %s added, service info: %s" % (name, info))
+        
+            ip_aton = None
+            if info.name == "Testing._http._tcp.local.":
+                for x in info.addresses:
+                    ip_aton = x
+                    break
+            
+                ip = socket.inet_ntoa(ip_aton)
+                port = info.port
+                
+                print("http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (ip, port, status, color, intensity))
+            else:
+                print("Address and name do not match")
+    
+    zeroconf = Zeroconf()
+    listener = MyListener()
+    browser = ServiceBrowser(zeroconf, "_http._tcp.local.", listener)
+
+    try:
+        input("Press enter to exit....")
+    finally:
+        zeroconf.close()
+    
+    #print("http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (ip, port, status, color, intensity))
 
 # Canvas route
 @app.route('/Canvas')
