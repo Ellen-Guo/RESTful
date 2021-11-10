@@ -8,43 +8,79 @@ import RPi.GPIO as GPIO
 # status and color of LED obtained through GET request
 # status and color of LED changed through POST request
 
+r = 27
+g = 13
+b = 26
+
 # Setup GPIO
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
-LEDS = (27, 13, 26)
+LEDS = (r, g, b)
 GPIO.setup(LEDS, GPIO.OUT)
 GPIO.output(LEDS, False)
 
-pwm = GPIO.PWM(LEDS, 50)  # frequency=50Hz
-pwm.start(0)
+pR = GPIO.PWM(r, 50)  # frequency=50Hz
+pR.start(0)
+pG = GPIO.PWM(g, 50)  # frequency=50Hz
+pG.start(0)
+pB = GPIO.PWM(b, 50)  # frequency=50Hz
+pB.start(0)
 
-# set intensity
-intensity = # whatever from command
-p.ChangeDutyCycle(intensity)
-
-# set color
-color = # whatever from command
-
-status = # whatever from command
-if status == 'on':
-    if color == 'white':
-        GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.HIGH))
-    elif color == 'red':
-        GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.LOW))
-    elif color == 'blue':
-        GPIO.output(LEDS, (GPIO.LOW, GPIO.LOW, GPIO.HIGH))
-    elif colot == 'green':
-        GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.LOW))
-    elif color == 'magenta':
-        GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.HIGH))
-    elif colot == 'cyan':
-        GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.HIGH))
-    elif color == 'yellow':
-        GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.LOW))
-    time.sleep(1)
-else:
-    GPIO.output(LEDS, False)
+# parse get request
+url = "http://x.x.x.x:port/LED?status=off&color=magenta&intensity=100"
+posStatus = url.find("status=")
+posStatusAnd = url.find("&", posStatus, posStatus + 11)
+status = url[posStatus + 7: posStatusAnd]
+posColor = url.find("color=")
+posColorAnd = url.find("&", posColor, posColor + 14)
+color = url[posColor + 6: posColorAnd]
+posIntensity = url.find("intensity=")
+intensity = url[posIntensity + 10:]
 
 # Reset pins
-pwm.stop()
+pR.stop()
+pG.stop()
+pB.stop()
 GPIO.cleanup()
+
+def changeLED(intensity, color, status):
+    if status == 'on':
+        if color == 'white':
+            pR.ChangeDutyCycle(intensity)
+            pG.ChangeDutyCycle(intensity)
+            pB.ChangeDutyCycle(intensity)
+            GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.HIGH))
+        elif color == 'red':
+            pR.ChangeDutyCycle(intensity)
+            pG.ChangeDutyCycle(0)
+            pB.ChangeDutyCycle(0)
+            GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.LOW))
+        elif color == 'blue':
+            pR.ChangeDutyCycle(0)
+            pG.ChangeDutyCycle(0)
+            pB.ChangeDutyCycle(intensity)
+            GPIO.output(LEDS, (GPIO.LOW, GPIO.LOW, GPIO.HIGH))
+        elif color == 'green':
+            pR.ChangeDutyCycle(0)
+            pG.ChangeDutyCycle(intensity)
+            pB.ChangeDutyCycle(0)
+            GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.LOW))
+        elif color == 'magenta':
+            pR.ChangeDutyCycle(intensity)
+            pG.ChangeDutyCycle(0)
+            pB.ChangeDutyCycle(intensity)
+            GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.HIGH))
+        elif color == 'cyan':
+            pR.ChangeDutyCycle(0)
+            pG.ChangeDutyCycle(intensity)
+            pB.ChangeDutyCycle(intensity)
+            GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.HIGH))
+        elif color == 'yellow':
+            pR.ChangeDutyCycle(intensity)
+            pG.ChangeDutyCycle(intensity)
+            pB.ChangeDutyCycle(0)
+            GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.LOW))
+        time.sleep(5)
+    else:
+        GPIO.output(LEDS, False)
+        time.sleep(5)
