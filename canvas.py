@@ -2,8 +2,10 @@ from flask import Flask, request
 from flask_httpauth import HTTPBasicAuth
 import pymongo
 from pymongo import MongoClient
+import requests
+import serviceKeys
 
-# global veriables
+# global variables
 app = Flask(__name__)
 auth = HTTPBasicAuth()
 
@@ -39,13 +41,28 @@ def LED():
     color = command[command.find('-') + 1: command.find('-', command.find('-') + 1)]
     intensity = command[command.find('-', command.find('-') + 1) + 1:]
     return status
+    # what does post to an LED do?
 
-@app.route('/Canvas')
+@app.route('/Canvas', methods='GET')
+@auth.login_required
+def canvas_API():
+    # grab filename
+    filename = request.args.get('file')
+    # is the full complete path to the file provided or just the filename?
+    # get is retrieving the item and post and uploading an item to canvas?
+    # is there a specific location the posted files should end up?
+    # so we are not using the canvasapi library, just the python requests library...
+    # turn into a Python HTTP Request
+    r = requests.get(filename)
+    return filename
+
+@app.route('/Canvas', methods='POST')
 @auth.login_required
 def canvas_API():
     # grab filename
     filename = request.args.get('file')
     # turn into a Python HTTP Request
+    r = requests.post(filename)
     return filename
 
 

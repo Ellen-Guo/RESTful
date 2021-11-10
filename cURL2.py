@@ -3,7 +3,7 @@ from flask_httpauth import HTTPBasicAuth
 import pymongo
 from pymongo import MongoClient
 
-# global veriables
+# global variables
 app = Flask(__name__)
 auth = HTTPBasicAuth()
 
@@ -31,15 +31,18 @@ def verify_password(username, password):
 def auth_error(status):
     return "Access Denied ", status
 
+# LED route
 @app.route('/LED')
 @auth.login_required
 def LED():
     command = request.args.get('command')
+    # parsing of command from URL
     status = command[0:command.find('-')]
     color = command[command.find('-') + 1: command.find('-', command.find('-') + 1)]
     intensity = command[command.find('-', command.find('-') + 1) + 1:]
     return status
 
+# Canvas route
 @app.route('/Canvas')
 @auth.login_required
 def canvas_API():
