@@ -15,38 +15,36 @@ LEDS = (27, 13, 26)
 GPIO.setup(LEDS, GPIO.OUT)
 GPIO.output(LEDS, False)
 
-# white
-GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.HIGH))
-# red
-GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.LOW))
-# blue
-GPIO.output(LEDS, (GPIO.LOW, GPIO.LOW, GPIO.HIGH))
-# green
-GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.LOW))
-# magenta
-GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.HIGH))
-# cyan
-GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.HIGH))
-# yellow
-GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.LOW))
+pwm = GPIO.PWM(LEDS, 50)  # frequency=50Hz
+pwm.start(0)
 
-# how to brighten/dim an LED
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(12, GPIO.OUT)
+# set intensity
+intensity = # whatever from command
+p.ChangeDutyCycle(intensity)
 
-p = GPIO.PWM(12, 50)  # channel=12 frequency=50Hz
-p.start(0)
-try:
-    while 1:
-        for dc in range(0, 101, 5):
-            p.ChangeDutyCycle(dc)
-            time.sleep(0.1)
-        for dc in range(100, -1, -5):
-            p.ChangeDutyCycle(dc)
-            time.sleep(0.1)
-except KeyboardInterrupt:
-    pass
-p.stop()
+# set color
+color = # whatever from command
+
+status = # whatever from command
+if status == 'on':
+    if color == 'white':
+        GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.HIGH))
+    elif color == 'red':
+        GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.LOW))
+    elif color == 'blue':
+        GPIO.output(LEDS, (GPIO.LOW, GPIO.LOW, GPIO.HIGH))
+    elif colot == 'green':
+        GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.LOW))
+    elif color == 'magenta':
+        GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.HIGH))
+    elif colot == 'cyan':
+        GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.HIGH))
+    elif color == 'yellow':
+        GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.LOW))
+    time.sleep(1)
+else:
+    GPIO.output(LEDS, False)
 
 # Reset pins
+pwm.stop()
 GPIO.cleanup()
