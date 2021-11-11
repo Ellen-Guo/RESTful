@@ -14,23 +14,13 @@ from flask import Flask, request
 # status and color of LED obtained through GET request
 # status and color of LED changed through POST request
 
-receive = Flask(__name__)
+app = Flask(__name__)
 
-@receive.route('/LED')
+@app.route('/LED', methods=['GET'])
 def LED():
-    command = request.args.get('status')
-    print(command)
-    
-    # parse get request
-    #url = "http://x.x.x.x:port/LED?status=off&color=magenta&intensity=100"
-    #posStatus = url.find("status=")
-    #posStatusAnd = url.find("&", posStatus, posStatus + 11)
-    #status = url[posStatus + 7: posStatusAnd]
-    #posColor = url.find("color=")
-    #posColorAnd = url.find("&", posColor, posColor + 14)
-    #color = url[posColor + 6: posColorAnd]
-    #posIntensity = url.find("intensity=")
-    #intensity = url[posIntensity + 10:]
+    status = request.args.get('status')
+    color = request.args.get('color')
+    intensity = request.args.get('intensity')
 
 
 if __name__ == '__main__':
@@ -57,7 +47,7 @@ if __name__ == '__main__':
     info = ServiceInfo(
         "_http._tcp.local.",
         "Testing._http._tcp.local.",
-        addresses= [socket.inet_aton("127.0.0.1")],
+        addresses= [socket.inet_aton("0.0.0.0")], #Need IP address of LED pi. For testing on same device, use 0.0.0.0
         port=5000,
         properties=dict(),
         server=socket.gethostname() + '.local.',
@@ -68,7 +58,7 @@ if __name__ == '__main__':
     zeroconf.register_service(info)
     
     
-    receive.run(host="127.0.0.1", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
     
     
     r = 27
@@ -88,17 +78,6 @@ if __name__ == '__main__':
     pG.start(0)
     pB = GPIO.PWM(b, 50)  # frequency=50Hz
     pB.start(0)
-
-    # parse get request
-    #url = "http://x.x.x.x:port/LED?status=off&color=magenta&intensity=100"
-    #posStatus = url.find("status=")
-    #posStatusAnd = url.find("&", posStatus, posStatus + 11)
-    #status = url[posStatus + 7: posStatusAnd]
-    #posColor = url.find("color=")
-    #posColorAnd = url.find("&", posColor, posColor + 14)
-    #color = url[posColor + 6: posColorAnd]
-    #posIntensity = url.find("intensity=")
-    #intensity = url[posIntensity + 10:]
 
     # Reset pins
     pR.stop()
