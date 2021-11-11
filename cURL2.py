@@ -90,7 +90,10 @@ def LED():
                 ip = socket.inet_ntoa(ip_aton)
                 port = info.port
                 
-                requests.get("http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (ip, port, status, color, intensity))
+                url = "http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (ip, port, status, color, intensity)
+                print(url)
+                r = requests.get(url)
+                print(r.text)
             else:
                 print("Address and name do not match")
     
