@@ -6,6 +6,7 @@ from pymongo import MongoClient
 from zeroconf import ServiceBrowser, Zeroconf
 from time import sleep
 import socket
+import requests
 
 
 class MyListener:
@@ -89,7 +90,7 @@ def LED():
                 ip = socket.inet_ntoa(ip_aton)
                 port = info.port
                 
-                print("http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (ip, port, status, color, intensity))
+                requests.get("http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (ip, port, status, color, intensity))
             else:
                 print("Address and name do not match")
     
