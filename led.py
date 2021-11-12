@@ -21,6 +21,7 @@ def LED():
     status = request.args.get('status')
     color = request.args.get('color')
     intensity = request.args.get('intensity')
+    return "status: %s. Color: %s. Intensity: %s" % (status, color, intensity)
 
 
 if __name__ == '__main__':
@@ -78,6 +79,8 @@ if __name__ == '__main__':
     pG.start(0)
     pB = GPIO.PWM(b, 50)  # frequency=50Hz
     pB.start(0)
+    
+    changeLED(intensity, color, status)
 
     # Reset pins
     pR.stop()
