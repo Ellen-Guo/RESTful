@@ -1,13 +1,18 @@
 from flask import Flask, request
+from werkzeug.datastructures import Authorization
 from flask_httpauth import HTTPBasicAuth
 import pymongo
 from pymongo import MongoClient
 import requests
-import serviceKeys
+import servicesKeys as key
+import json
 
 # global variables
 app = Flask(__name__)
 auth = HTTPBasicAuth()
+get_header = requests.structures.CaseInsensitiveDict()
+post_header = requests.structures.CaseInsensitiveDict()
+course_id = 136283
 
 # Username and password authentication block (LED route)
 @auth.verify_password
@@ -43,28 +48,47 @@ def LED():
     return status
     # what does post to an LED do?
 
-@app.route('/Canvas', methods='GET')
+@app.route('/Canvas', methods=['GET'])
 @auth.login_required
-def canvas_API():
+def canvas_API_get():
+    canvas_get_url = 'https://vt.instructure.com/api/v1/courses/'+ str(course_id) +'/files/'
     # grab filename
     filename = request.args.get('file')
-    # is the full complete path to the file provided or just the filename?
-    # get is retrieving the item and post and uploading an item to canvas?
-    # is there a specific location the posted files should end up?
-    # so we are not using the canvasapi library, just the python requests library...
-    # turn into a Python HTTP Request
-    r = requests.get(filename)
-    return filename
+    get_header["Authorization"] = 'Bearer ' + str(key.canvas_tok)
+    r = requests.get(canvas_get_url + '?search_term=' + str(filename), headers = get_header)
+    file_id = r.text[r.text.find("id")+4:r.text.find(",")]
+    # get file download link
+    file_info = requests.get(canvas_get_url + str(file_id), headers=get_header)
+    start_url = file_info.text.find("url")+6
+    canvas_get_file = file_info.text[start_url:file_info.text.find(",", start_url, -1)-1]
+    file_content = requests.get(canvas_get_file, headers=get_header, allow_redirects=True)
+    open(str(filename), 'wb').write(file_content.content)
+    # format header and return
+    json_return = json.dumps(dict(file_content.headers), indent=7)
+    return str(json_return)
 
-@app.route('/Canvas', methods='POST')
+@app.route('/Canvas', methods=['POST'])
 @auth.login_required
-def canvas_API():
+def canvas_API_post():
+    canvas_post_url = 'https://vt.instructure.com/api/v1/users/self/files'
     # grab filename
     filename = request.args.get('file')
+    f_content = request.files['file'].read()
+    open(str(filename), "wb").write(f_content)
     # turn into a Python HTTP Request
-    r = requests.post(filename)
-    return filename
+    post_header["Authorization"] = 'Bearer %s' % key.canvas_tok
+    post_header["parent_folder_path"] = "/"
+    post_header["name"]=filename
+    r = requests.post(url=canvas_post_url, headers=post_header)
+    # get upload url and parameters to make file post
+    response = json.loads(r.text)
+    upload_url = response["upload_url"]
+    print(filename)
+    upload_para = {'file': open(filename, 'rb')}
+    r_upload = requests.post(url=upload_url, files=upload_para)
+    return r_upload.text
 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8081, debug=True)
+
