@@ -1,9 +1,5 @@
-import time
 import RPi.GPIO as GPIO
-import argparse
-import logging
 import socket
-from time import sleep
 from zeroconf import IPVersion, ServiceInfo, Zeroconf
 from flask import Flask, request
 
@@ -15,6 +11,10 @@ from flask import Flask, request
 # status and color of LED changed through POST request
 
 app = Flask(__name__)
+global status, color, intensity
+status = 'off'
+color = ''
+intensity = 0
 
 r = 27
 g = 13
@@ -64,37 +64,32 @@ def changeLED(intensity, color, status):
         pG.stop()
         pB.stop()
         GPIO.output(LEDS, False)
+        
 
 @app.route('/LED', methods=['POST'])
 def LED_post():
     global status, color, intensity
     status = request.args.get('status')
-    color = request.args.get('color')
-    intensity = request.args.get('intensity')
     
-    changeLED(int(intensity), color, status)
-    
-    
-    try:
-        while True:
-            sleep(0.1)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        print("Unregistering...")
-        zeroconf.unregister_service(info)
-        zeroconf.close()
-    return "status: %s. Color: %s. Intensity: %s" % (status, color, intensity)
+    if status == 'off':
+        color = ''
+        intensity = 0
+        changeLED(int(intensity), color, status)
+    else:
+        color = request.args.get('color')
+        intensity = request.args.get('intensity')
+        changeLED(int(intensity), color, status)
+        
+    return "Updated to status: %s. Color: %s. Intensity: %s" % (status, color, intensity)
 
 @app.route('/LED', methods=['GET'])
 def LED_get():
     global status, color, intensity
-    
+    return "Current status: %s. Color: %s. Intensity: %s" % (status, color, intensity)
 
-
-desc = {'Colors': 'White, Red, Green, Blue, Cyan, Magenta, Yellow'}
+desc = {'Colors': 'white, red, green, blue, cyan, magenta, yellow'}
 local = socket.gethostbyname(socket.gethostname() + ".local")
-print(local)
+
 info = ServiceInfo(
     "_http._tcp.local.",
     "Testing._http._tcp.local.",
