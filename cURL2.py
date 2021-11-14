@@ -32,15 +32,11 @@ def signal_handler(signal, frame):
     sys.exit(0)
     
 class MyListener(object):
-    # attempt at class variable
-    def __init__(self):
-        self.ip = ''
-        self.port = ''
-
     def remove_service(self, zeroconf, type, name):
         print("service %s removed" % (name,))
         
     def add_service(self, zeroconf, type, name):
+        global ip, port
         info = zeroconf.get_service_info(type, name)
         print("Service %s added, service info: %s" % (name, info))
         
@@ -59,9 +55,9 @@ class MyListener(object):
         else:
             print("Address and name do not match")
 
-    # attempt to return class variable using class function
-    # def show_data(self):
-    #     return (self.ip, self.port)
+zeroconf = Zeroconf()
+listener = MyListener()
+browser = ServiceBrowser(zeroconf, "_http._tcp.local.", listener)
 
 # Username and password authentication block (LED route)
 @auth.verify_password
@@ -91,20 +87,14 @@ def auth_error(status):
 @app.route('/LED')
 @auth.login_required
 def LED():
-    zeroconf = Zeroconf()
-    listener = MyListener()
-    browser = ServiceBrowser(zeroconf, "_http._tcp.local.", listener)
-    address = listener.ip
-    portnum = listener.port
-    print(address, portnum)
-
+    global ip, port
     command = request.args.get('command')
     # parsing of command from URL
     status = command[0:command.find('-')]
     color = command[command.find('-') + 1: command.find('-', command.find('-') + 1)]
     intensity = command[command.find('-', command.find('-') + 1) + 1:]
 
-    url = "http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (str(address), str(portnum), status, color, intensity) 
+    url = "http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (str(ip), str(port), status, color, intensity) 
     print(url)
     r = requests.get(url)
     return r.text
