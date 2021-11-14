@@ -1,4 +1,3 @@
-
 from flask import Flask, request
 from flask_httpauth import HTTPBasicAuth
 import pymongo
@@ -15,6 +14,51 @@ auth = HTTPBasicAuth()
 
 #ip = 0
 #port = 0
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+def signal_handler(signal, frame):
+    print("Interrupt called")
+    zeroconf.unregister_service(info)
+    zeroconf.close()
+    sys.exit(0)
+    
+class MyListener(object):
+    def __init__(self):
+        self.ip = get_ip()
+        self.port = 8089
+
+    def remove_service(self, zeroconf, type, name):
+        print("service %s removed" % (name,))
+        
+    def add_service(self, zeroconf, type, name):
+        info = zeroconf.get_service_info(type, name)
+        print("Service %s added, service info: %s" % (name, info))
+        
+        ip_aton = None
+        if info.name == "Testing._http._tcp.local.":
+            for x in info.addresses:
+                ip_aton = x
+                break
+            
+            self.ip = socket.inet_ntoa(ip_aton)
+            #ip = socket.inet_ntoa(ip_aton)
+            self.port = info.port
+            #port = info.port
+                
+        else:
+            print("Address and name do not match")
+
+    def show_data(self):
+        return (self.ip, self.port)
 
 # Username and password authentication block (LED route)
 @auth.verify_password
@@ -40,56 +84,6 @@ def verify_password(username, password):
 def auth_error(status):
     return "Access Denied ", status
 
-def get_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(('10.255.255.255', 1))
-        IP = s.getsockname()[0]
-    except Exception:
-        IP = '127.0.0.1'
-    finally:
-        s.close()
-    return IP
-
-def signal_handler(signal, frame):
-    print("Interrupt called")
-    zeroconf.unregister_service(info)
-    zeroconf.close()
-    sys.exit(0)
-    
-class MyListener(object):
-    
-    def __init__(self):
-        self.ip = get_ip()
-        self.port = 5000
-    
-    def remove_service(self, zeroconf, type, name):
-        print("service %s removed" % (name,))
-        
-    def add_service(self, zeroconf, type, name):
-        info = zeroconf.get_service_info(type, name)
-        print("Service %s added, service info: %s" % (name, info))
-        
-        ip_aton = None
-        if info.name == "Testing._http._tcp.local.":
-            for x in info.addresses:
-                ip_aton = x
-                break
-            
-            self.ip = socket.inet_ntoa(ip_aton)
-            #ip = socket.inet_ntoa(ip_aton)
-            self.port = info.port
-            #port = info.port
-            #print(str(ip), ' ', str(port))
-            #return (self.ip, self.port)
-                
-        else:
-            print("Address and name do not match")
-            
-    def show_data(self):
-        return (self.ip, self.port)
-   
-
 # LED route
 @app.route('/LED')
 @auth.login_required
@@ -108,14 +102,15 @@ def LED():
     
     zeroconf = Zeroconf()
     listener = MyListener()
-    
     address, portnum = listener.show_data()
+    print(address, portnum)
     browser = ServiceBrowser(zeroconf, "_http._tcp.local.", listener)
 
     url = "http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (str(address), str(portnum), status, color, intensity) 
     print(url)
     r = requests.get(url)
     return r.text
+
     
 
 # Canvas route
