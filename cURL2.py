@@ -46,7 +46,8 @@ class MyListener(object):
             
             ip = socket.inet_ntoa(ip_aton)
             port = info.port
-            print('Inside: ', ip, port)
+            color = info.properties
+            print('Inside: ', ip, port, color)
                 
         else:
             print("Address and name do not match")
