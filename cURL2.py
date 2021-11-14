@@ -11,9 +11,7 @@ import requests
 # global variables
 app = Flask(__name__)
 auth = HTTPBasicAuth()
-# attempt at using global variable
-#ip = 0
-#port = 0
+
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -46,11 +44,9 @@ class MyListener(object):
                 ip_aton = x
                 break
             
-            self.ip = socket.inet_ntoa(ip_aton)
-            self.port = info.port
             ip = socket.inet_ntoa(ip_aton)
             port = info.port
-            return (ip, port)
+            print('Inside: ', ip, port)
                 
         else:
             print("Address and name do not match")
@@ -94,6 +90,7 @@ def LED():
     color = command[command.find('-') + 1: command.find('-', command.find('-') + 1)]
     intensity = command[command.find('-', command.find('-') + 1) + 1:]
 
+    print('Inside Flask: ', ip, port)
     url = "http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (str(ip), str(port), status, color, intensity) 
     print(url)
     r = requests.get(url)
