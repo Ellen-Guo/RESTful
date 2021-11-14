@@ -16,64 +16,63 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-
-@app.route('/LED', methods=['GET'])
-def LED():
-    status = request.args.get('status')
-    color = request.args.get('color')
-    intensity = request.args.get('intensity')
-
-    r = 27
-    g = 13
-    b = 26
+r = 27
+g = 13
+b = 26
 
     # Setup GPIO
-    GPIO.setwarnings(False)
-    GPIO.setmode(GPIO.BCM)
-    LEDS = (r, g, b)
-    GPIO.setup(LEDS, GPIO.OUT)
-    GPIO.output(LEDS, False)
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+LEDS = (r, g, b)
+GPIO.setup(LEDS, GPIO.OUT)
+GPIO.output(LEDS, False)
 
-    pR = GPIO.PWM(r, 50)  # frequency=50Hz
-    pG = GPIO.PWM(g, 50)  # frequency=50Hz
-    pB = GPIO.PWM(b, 50)  # frequency=50Hz
-    
-    changeLED(intensity, color, status)
-    
-    def changeDC(iR, iG, iB):
-        pR.start(iR)
-        pG.start(iG)
-        pB.start(iB)
+pR = GPIO.PWM(r, 50)  # frequency=50Hz
+pG = GPIO.PWM(g, 50)  # frequency=50Hz
+pB = GPIO.PWM(b, 50)  # frequency=50Hz
 
-    def changeLED(intensity, color, status):
-        if status == 'on':
-            if color == 'white':
-                changeDC(intensity, intensity, intensity)
-                GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.HIGH))
-            elif color == 'red':
-                changeDC(intensity, 0, 0)
-                GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.LOW))
-            elif color == 'blue':
-                changeDC(0, 0, intensity)
-                GPIO.output(LEDS, (GPIO.LOW, GPIO.LOW, GPIO.HIGH))
-            elif color == 'green':
-                changeDC(0, intensity, 0)
-                GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.LOW))
-            elif color == 'magenta':
-                changeDC(intensity, 0, intensity)
-                GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.HIGH))
-            elif color == 'cyan':
-                changeDC(0, intensity, intensity)
-                GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.HIGH))
-            elif color == 'yellow':
-                changeDC(intensity, intensity, 0)
-                GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.LOW))
+def changeDC(iR, iG, iB):
+    pR.start(iR)
+    pG.start(iG)
+    pB.start(iB)
+
+def changeLED(intensity, color, status):
+    if status == 'on':
+        if color == 'white':
+            changeDC(intensity, intensity, intensity)
+            GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.HIGH))
+        elif color == 'red':
+            changeDC(intensity, 0, 0)
+            GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.LOW))
+        elif color == 'blue':
+            changeDC(0, 0, intensity)
+            GPIO.output(LEDS, (GPIO.LOW, GPIO.LOW, GPIO.HIGH))
+        elif color == 'green':
+            changeDC(0, intensity, 0)
+            GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.LOW))
+        elif color == 'magenta':
+            changeDC(intensity, 0, intensity)
+            GPIO.output(LEDS, (GPIO.HIGH, GPIO.LOW, GPIO.HIGH))
+        elif color == 'cyan':
+            changeDC(0, intensity, intensity)
+            GPIO.output(LEDS, (GPIO.LOW, GPIO.HIGH, GPIO.HIGH))
+        elif color == 'yellow':
+            changeDC(intensity, intensity, 0)
+            GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.LOW))
         else:
             pR.stop()
             pG.stop()
             pB.stop()
             GPIO.output(LEDS, False)
+
+
+@app.route('/LED', methods=['POST'])
+def LED():
+    status = request.args.get('status')
+    color = request.args.get('color')
+    intensity = request.args.get('intensity')
     
+    changeLED(int(intensity), color, status)
     
     try:
         while True:
