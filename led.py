@@ -59,20 +59,21 @@ def changeLED(intensity, color, status):
         elif color == 'yellow':
             changeDC(intensity, intensity, 0)
             GPIO.output(LEDS, (GPIO.HIGH, GPIO.HIGH, GPIO.LOW))
-        else:
-            pR.stop()
-            pG.stop()
-            pB.stop()
-            GPIO.output(LEDS, False)
-
+    else:
+        pR.stop()
+        pG.stop()
+        pB.stop()
+        GPIO.output(LEDS, False)
 
 @app.route('/LED', methods=['POST'])
-def LED():
+def LED_post():
+    global status, color, intensity
     status = request.args.get('status')
     color = request.args.get('color')
     intensity = request.args.get('intensity')
     
     changeLED(int(intensity), color, status)
+    
     
     try:
         while True:
@@ -85,8 +86,13 @@ def LED():
         zeroconf.close()
     return "status: %s. Color: %s. Intensity: %s" % (status, color, intensity)
 
+@app.route('/LED', methods=['GET'])
+def LED_get():
+    global status, color, intensity
+    
 
-desc = {'Version': '1.0'}
+
+desc = {'Colors': 'White, Red, Green, Blue, Cyan, Magenta, Yellow'}
 local = socket.gethostbyname(socket.gethostname() + ".local")
 print(local)
 info = ServiceInfo(
