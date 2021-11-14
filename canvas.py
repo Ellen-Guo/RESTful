@@ -1,5 +1,4 @@
 from flask import Flask, request
-from werkzeug.datastructures import Authorization
 from flask_httpauth import HTTPBasicAuth
 import pymongo
 from pymongo import MongoClient
@@ -36,7 +35,7 @@ def verify_password(username, password):
 # Authentication Error Handler
 @auth.error_handler
 def auth_error(status):
-    return "Access Denied ", status
+    return "Access Denied Invalid Username and Password Provided. ", status
 
 @app.route('/LED')
 @auth.login_required
@@ -86,9 +85,11 @@ def canvas_API_post():
     print(filename)
     upload_para = {'file': open(filename, 'rb')}
     r_upload = requests.post(url=upload_url, files=upload_para)
-    return r_upload.text
+    # format text returned
+    upload_json = json.loads(r_upload.text)
+    return_json = json.dumps(upload_json, indent=len(upload_json))
+    return str(return_json)
 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8081, debug=True)
-

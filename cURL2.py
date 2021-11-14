@@ -79,23 +79,34 @@ def verify_password(username, password):
 def auth_error(status):
     return "Access Denied ", status
 
-# LED route
-@app.route('/LED')
+# LED routes
+@app.route('/LED', method=['POST'])
 @auth.login_required
-def LED():
+def post_LED():
     global ip, port
     command = request.args.get('command')
     # parsing of command from URL
     status = command[0:command.find('-')]
     color = command[command.find('-') + 1: command.find('-', command.find('-') + 1)]
     intensity = command[command.find('-', command.find('-') + 1) + 1:]
-
+    
     print('Inside Flask: ', ip, port)
     url = "http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (str(ip), str(port), status, color, intensity) 
     print(url)
-    r = requests.get(url)
+    r = requests.post(url)
     return r.text
 
+@app.route('/LED', method=['GET'])
+@auth.login_required
+def get_LED():
+    global ip, port
+
+    print('Inside Flask: ', ip, port)
+    url = "http://%s:%s/LED" % (str(ip), str(port)) 
+    print(url)
+    r = requests.post(url)
+    # might need to json the return
+    return r.text
     
 
 # Canvas route
