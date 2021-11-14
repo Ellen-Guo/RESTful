@@ -11,7 +11,7 @@ import requests
 # global variables
 app = Flask(__name__)
 auth = HTTPBasicAuth()
-
+# attempt at using global variable
 #ip = 0
 #port = 0
 def get_ip():
@@ -32,9 +32,10 @@ def signal_handler(signal, frame):
     sys.exit(0)
     
 class MyListener(object):
+    # attempt at class variable
     def __init__(self):
-        self.ip = get_ip()
-        self.port = 8089
+        self.ip = ''
+        self.port = ''
 
     def remove_service(self, zeroconf, type, name):
         print("service %s removed" % (name,))
@@ -50,15 +51,17 @@ class MyListener(object):
                 break
             
             self.ip = socket.inet_ntoa(ip_aton)
-            #ip = socket.inet_ntoa(ip_aton)
             self.port = info.port
-            #port = info.port
+            ip = socket.inet_ntoa(ip_aton)
+            port = info.port
+            return (ip, port)
                 
         else:
             print("Address and name do not match")
 
-    def show_data(self):
-        return (self.ip, self.port)
+    # attempt to return class variable using class function
+    # def show_data(self):
+    #     return (self.ip, self.port)
 
 # Username and password authentication block (LED route)
 @auth.verify_password
@@ -88,23 +91,18 @@ def auth_error(status):
 @app.route('/LED')
 @auth.login_required
 def LED():
-    #ip = 0
-    #port = 0
-    
+    zeroconf = Zeroconf()
+    listener = MyListener()
+    browser = ServiceBrowser(zeroconf, "_http._tcp.local.", listener)
+    address = listener.ip
+    portnum = listener.port
+    print(address, portnum)
+
     command = request.args.get('command')
     # parsing of command from URL
     status = command[0:command.find('-')]
     color = command[command.find('-') + 1: command.find('-', command.find('-') + 1)]
     intensity = command[command.find('-', command.find('-') + 1) + 1:]
-    
-    #ip = get_ip()
-    #port = 5000
-    
-    zeroconf = Zeroconf()
-    listener = MyListener()
-    address, portnum = listener.show_data()
-    print(address, portnum)
-    browser = ServiceBrowser(zeroconf, "_http._tcp.local.", listener)
 
     url = "http://%s:%s/LED?status=%s&color=%s&intensity=%s" % (str(address), str(portnum), status, color, intensity) 
     print(url)
